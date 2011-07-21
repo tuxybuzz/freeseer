@@ -25,6 +25,8 @@
 from os import listdir;
 from os import name;
 
+from signal import *
+
 from PyQt4 import QtGui, QtCore
 
 from freeseer import project_info
@@ -172,6 +174,11 @@ class MainApp(QtGui.QMainWindow):
         self.talkEditor = TalkEditorMainApp(self.core)
         self.configTool = ConfigTool(self.core)
         self.configTool.hide()
+        
+        #Ctrl+c handler
+        signal(SIGINT, self.ctrl_c_handler)
+        self.connect(self, QtCore.SIGNAL('emitCloseApp()'), self.close)
+        
 
     def setupLanguageMenu(self):
         #Add Languages to the Menu Ensure only one is clicked 
@@ -528,8 +535,8 @@ class MainApp(QtGui.QMainWindow):
             self.ui.audioFeedbackSlider.setValue(value)
 
     def closeEvent(self, event):
-        self.core.logger.log.info('Exiting freeseer...')
-        event.accept()
+            self.core.logger.log.info('Exiting freeseer...')
+            event.accept()
         
 
     def translateAction(self ,action):
@@ -574,9 +581,13 @@ class MainApp(QtGui.QMainWindow):
         # Restore window positioning if one was saved.
         if (self.talkEditor.geometry is not None):
             self.talkEditor.restoreGeometry(self.talkEditor.geometry)
+            
+    def ctrl_c_handler(self, signal, frame):
+        self.emit(QtCore.SIGNAL('emitCloseApp()'))
+        
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     main = MainApp()
-    main.show();
+    main.show()
     sys.exit(app.exec_())
